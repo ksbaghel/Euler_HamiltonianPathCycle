@@ -19,9 +19,6 @@ ALGO to ID count of stringly connected components.
 
 */
 
-/*
-//Testing for git
-*/
 #include "stdafx.h"
 #include <iostream>
 #include <vector>
@@ -61,6 +58,8 @@ public:
 	bool HamiltonianUtil(int v, vector<bool> &visited, vector<int> &path, int pos);
 	int stronglyConnectedComponents();
 	Graph getTranspose(); //Get a transpose or reverse of a graph; Used for identofying strongly connected
+	void TopologicalSort_DFS();
+	bool TopologicalSort_DFS_Util(int v, stack<int> &S, vector<bool> &visited, vector<bool> &recStack);
 };
 
 Graph::Graph(const Graph& g)
@@ -468,6 +467,67 @@ bool Graph::HamiltonianUtil(int v, vector<bool> &visited, vector<int> &path, int
 	return false;
 }
 
+void Graph::TopologicalSort_DFS()
+{
+	//Push the node into stack once DFS is done
+	//Any visited node should not be in the recStack of the current node
+	stack<int> S;
+	vector<bool> visited(V, false);
+	vector<bool> recStack(V, false);
+	//int noCycle = true;
+	for (int i = 0; i < V; i++)
+	{
+		if (!visited[i])
+		{
+			if (!TopologicalSort_DFS_Util(i, S, visited, recStack))
+			{
+				cout << "Graph contains cycle !!!" << endl;
+				return;
+			}
+			S.push(i);
+		}
+	}
+
+	cout << "Topological SORT  DFS: " << " ";
+	int u;
+	while (!S.empty())
+	{
+		u = S.top();
+		S.pop();
+		cout << u << " -> ";
+	}
+	cout << "END" << endl;
+}
+
+//return false if graph has cycle
+bool Graph::TopologicalSort_DFS_Util(int v, stack<int> &S, vector<bool> &visited, vector<bool> &recStack)
+{
+	if (recStack[v]) return false;
+	visited[v] = true;
+	recStack[v] = true;
+
+	list<int> adjList = adj[v];
+	for (auto it = adjList.begin(); it != adjList.end(); ++it)
+	{
+		if (!visited[*it])
+		{
+			if (!TopologicalSort_DFS_Util(*it, S, visited, recStack))
+			{
+				return false;
+			}
+			else {
+				S.push(*it);
+			}
+		}
+		else if (recStack[*it])
+		{
+			return false;
+		}
+	}
+	recStack[v] = false;
+	return true;
+}
+
 int main()
 {
 	int i = 1; 
@@ -579,9 +639,10 @@ int main()
 	g10.isEulerian();
 	cout << "g10->SSC : " << g10.stronglyConnectedComponents() << endl;
 	g10.isHamiltonianCycle();
+	g10.TopologicalSort_DFS();
 
 	cout << "GRAPH - " << i++ << endl;
-	Graph g11(10);
+	Graph g11(10, true);
 	g11.addEdge(1, 0);
 	g11.addEdge(9, 1);
 	g11.addEdge(5, 2);
@@ -597,6 +658,7 @@ int main()
 	g11.addEdge(4, 8);
 	g11.addEdge(5, 4);
 	g11.isHamiltonianCycle();
+	g11.TopologicalSort_DFS();
 
 
     return 0;
