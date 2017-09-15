@@ -24,6 +24,7 @@ ALGO to ID count of stringly connected components.
 #include <vector>
 #include <list>
 #include <stack>
+#include <queue>
 
 using namespace std;
 
@@ -60,6 +61,7 @@ public:
 	Graph getTranspose(); //Get a transpose or reverse of a graph; Used for identofying strongly connected
 	void TopologicalSort_DFS();
 	bool TopologicalSort_DFS_Util(int v, stack<int> &S, vector<bool> &visited, vector<bool> &recStack);
+	void TopologicalSort_KAHN();
 };
 
 Graph::Graph(const Graph& g)
@@ -499,6 +501,53 @@ void Graph::TopologicalSort_DFS()
 	cout << "END" << endl;
 }
 
+void Graph::TopologicalSort_KAHN()
+{
+	vector<int> IN = InDegree;
+	queue<int> Q;
+	//first print the nodes which do have zero inDegree
+	for (int i = 0; i < V; i++)
+	{
+		if (IN[i] == 0)
+		{
+			Q.push(i);
+		}
+	}
+
+	vector<int> res;
+	int count = 0;
+	int u = 0;
+	while (!Q.empty())
+	{
+		u = Q.front();
+		Q.pop();
+		res.push_back(u);
+		count++;
+		//Now reduce the indegree of its adj nodes
+		list<int> adjList = adj[u];
+		for (auto it = adjList.begin(); it != adjList.end(); ++it)
+		{
+			IN[*it]--;
+			if (IN[*it] == 0)
+			{
+				Q.push(*it);
+			}
+		}
+	}
+	if (count != V)
+	{
+		cout << "GRAPH is Cyclic !!!" << endl;
+	}
+	else {
+		cout << "Topological SORT  KAHN: " << " ";
+		for (int i = 0; i < res.size(); i++)
+		{
+			cout << res[i] << " -> ";
+		}
+		cout << endl;
+	}
+}
+
 //return false if graph has cycle
 bool Graph::TopologicalSort_DFS_Util(int v, stack<int> &S, vector<bool> &visited, vector<bool> &recStack)
 {
@@ -640,6 +689,7 @@ int main()
 	cout << "g10->SSC : " << g10.stronglyConnectedComponents() << endl;
 	g10.isHamiltonianCycle();
 	g10.TopologicalSort_DFS();
+	g10.TopologicalSort_KAHN();
 
 	cout << "GRAPH - " << i++ << endl;
 	Graph g11(10, true);
@@ -659,6 +709,7 @@ int main()
 	g11.addEdge(5, 4);
 	g11.isHamiltonianCycle();
 	g11.TopologicalSort_DFS();
+	g11.TopologicalSort_KAHN();
 
 
     return 0;
